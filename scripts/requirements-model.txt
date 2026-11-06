@@ -1,0 +1,7 @@
+# Export environment used for the initial trial model. CPU wheels via uv --torch-backend cpu.
+ultralytics==8.4.203
+torch==2.15.0+cpu
+torchvision==0.29.2+cpu
+onnx==1.23.2
+onnxruntime==1.31.1
+onnxslim==0.1.99
