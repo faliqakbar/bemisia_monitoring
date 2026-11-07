@@ -1,0 +1,12 @@
+# Files Cloud Build does not need for the AI server image (see Dockerfile).
+.git/
+.env*
+node_modules/
+dist/
+test-results/
+.npm-cache/
+.tools/
+.venv-model/
+model-work/
+server/node_modules/
+server/dist/

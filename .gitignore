@@ -8,3 +8,5 @@ test-results/
 .tools/
 .venv-model/
 model-work/
+server/node_modules/
+server/dist/

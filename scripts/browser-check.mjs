@@ -131,6 +131,9 @@ try {
     throw new Error(
       "Use --mode browser-test for the preview build: smoke tests must not write to your cloud project.",
     );
+  // public/_headers (Cloudflare) and vite preview enable multi-threaded ONNX.
+  if (!(await evaluate("crossOriginIsolated")))
+    throw new Error("Page is not cross-origin isolated");
   const desktop = await send("Page.captureScreenshot", { format: "png" });
   await writeFile(
     path.join(output, "dashboard-desktop.png"),
@@ -224,6 +227,14 @@ try {
   await waitFor(
     () => textIncludes("Monitoring tersimpan di perangkat ini."),
     "local save",
+  );
+  // The worker only controls pages loaded after it activates; a fast analysis can beat it.
+  await waitFor(
+    () =>
+      evaluate(
+        "navigator.serviceWorker.getRegistration().then(r=>r?.active?.state==='activated')",
+      ),
+    "service worker activation",
   );
   await send("Page.reload");
   await waitFor(() => textIncludes("Perlu koreksi"), "persisted feedback");

@@ -78,7 +78,15 @@ Lihat [MODEL_INTEGRATION.md](docs/MODEL_INTEGRATION.md) untuk ekspor model pengg
 
 `src/components` UI reusable; `src/pages` tujuh halaman; `src/ai` adapter, tiling, preprocessing dan NMS; `src/imageQuality` kualitas; `src/database` interface/repository; `src/offline` IndexedDB & sync; `src/utils` tren, image, tanggal; `supabase/migrations` schema/RLS; `tests` unit tests; `.github/workflows/deploy.yml` CI Pages; `public` manifest/icons/model ONNX; `scripts/export-model.py` ekspor dan verifikasi model pengganti.
 
-## GitHub Pages / Cloudflare Pages
+## Deploy
+
+Langkah lengkap ada di [docs/DEPLOY.md](docs/DEPLOY.md): server AI di **Google Cloud Run** (`server/`, `Dockerfile`) dan aplikasi di **Cloudflare Pages**. Workflow GitHub Actions kini hanya CI (typecheck, test, build aplikasi & server).
+
+## Server AI (Cloud Run)
+
+Bila `VITE_AI_SERVER_URL` diisi dan opsi **Analisis di server AI saat online** aktif, foto asli dikirim ke server lalu dianalisis dengan model, tiling, resize bilinear gaya canvas, dan NMS yang sama dengan aplikasi; hasil memakai versi model yang sama sehingga tetap sebanding di tren. Offline atau server gagal: otomatis model di perangkat. Server lokal: `npm install --prefix server`, `npm run build --prefix server`, lalu `MODEL_DIR=public/models node server/dist/index.mjs` (port 8080).
+
+## Catatan lama: GitHub Pages / Cloudflare Pages
 
 Jadikan isi folder **bemisia-monitoring** sebagai root repository GitHub, commit termasuk `package-lock.json`, push branch main. Aktifkan Settings → Pages → GitHub Actions. Workflow menjalankan `npm ci`, typecheck, tests, build, lalu deploy `dist`. `VITE_BASE_PATH` otomatis `/{nama-repository}/`; set repository variable `/` untuk custom domain/user Pages. Isi dua repository variables Supabase jika ingin cloud; kosongkan untuk demo.
 

@@ -1,5 +1,6 @@
 import { MockBemisiaDetector } from "./mockDetector";
 import { OnnxBemisiaDetector } from "./onnxDetector";
+import { aiServerUrl, detectOnServer } from "./serverDetector";
 import type { Settings } from "../types";
 export type { BemisiaDetector } from "./types";
 export async function detectImage(
@@ -8,6 +9,16 @@ export async function detectImage(
   progress: (message: string) => void,
 ) {
   if (settings.preferOnnx) {
+    // Server first while online; the same model on the device is the fallback.
+    if (settings.useServer && aiServerUrl && navigator.onLine) {
+      try {
+        return await detectOnServer(image, settings, progress);
+      } catch {
+        progress(
+          "Server AI tidak dapat dihubungi — memakai model di perangkat...",
+        );
+      }
+    }
     const detector = new OnnxBemisiaDetector(settings);
     try {
       progress("Memuat model ONNX di perangkat...");

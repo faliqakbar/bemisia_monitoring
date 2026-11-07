@@ -70,6 +70,8 @@ export interface Settings {
   blurRetake: number;
   blurWarning: number;
   preferOnnx: boolean;
+  // Analyse on the Cloud Run server while online (only when VITE_AI_SERVER_URL is set).
+  useServer: boolean;
 }
 // Threshold epidemiological/action level belum divalidasi dan hanya untuk prototype.
 export const DEFAULT_SETTINGS: Settings = {
@@ -83,4 +85,5 @@ export const DEFAULT_SETTINGS: Settings = {
   blurRetake: 25,
   blurWarning: 70,
   preferOnnx: false,
+  useServer: true,
 };

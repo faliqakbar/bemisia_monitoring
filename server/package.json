@@ -1,0 +1,17 @@
+{
+  "name": "bemisia-ai-server",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild index.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/index.mjs --external:onnxruntime-node --external:sharp",
+    "start": "node dist/index.mjs"
+  },
+  "dependencies": {
+    "onnxruntime-node": "1.23.2",
+    "sharp": "^0.34.4"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.10"
+  }
+}

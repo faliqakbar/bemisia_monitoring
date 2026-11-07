@@ -1,3 +1,5 @@
+// Original file behind a canvas, so the AI server gets the photo without re-compression.
+export const sourceFiles = new WeakMap<HTMLCanvasElement, File>();
 export async function readImage(file: File): Promise<HTMLCanvasElement> {
   if (!file.type.startsWith("image/"))
     throw new Error("Pilih file gambar JPG, PNG, atau WebP.");
@@ -12,6 +14,7 @@ export async function readImage(file: File): Promise<HTMLCanvasElement> {
     canvas.width = image.naturalWidth;
     canvas.height = image.naturalHeight;
     canvas.getContext("2d")!.drawImage(image, 0, 0);
+    sourceFiles.set(canvas, file);
     return canvas;
   } catch (error) {
     throw new Error(

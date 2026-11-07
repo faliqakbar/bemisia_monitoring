@@ -2,7 +2,14 @@ import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
+// Same isolation headers as public/_headers so local preview matches Cloudflare Pages.
+const isolation = {
+  "Cross-Origin-Opener-Policy": "same-origin",
+  "Cross-Origin-Embedder-Policy": "require-corp",
+};
 export default defineConfig(({ mode }) => ({
+  server: { headers: isolation },
+  preview: { headers: isolation },
   base: loadEnv(mode, process.cwd(), "").VITE_BASE_PATH || "/",
   build: {
     rollupOptions: {
@@ -33,7 +40,20 @@ export default defineConfig(({ mode }) => ({
         // after the first online ONNX run so analysis also works offline.
         runtimeCaching: [
           {
-            // Network first keeps a replaced model and its model-info.json in step.
+            // Weights requested as bemisia.onnx?v=<sha256> never change, so they
+            // are downloaded once; a new model gets a new URL and replaces it.
+            urlPattern: ({ url }) =>
+              /\/models\/[^/]+\.onnx$/.test(url.pathname) &&
+              /^[a-f0-9]{64}$/.test(url.searchParams.get("v") ?? ""),
+            handler: "CacheFirst",
+            options: {
+              cacheName: "bemisia-model-weights",
+              cacheableResponse: { statuses: [200] },
+              expiration: { maxEntries: 1 },
+            },
+          },
+          {
+            // Network first keeps model-info.json (and unversioned weights) current.
             urlPattern: ({ url }) =>
               /\/models\/[^/]+\.(onnx|json)$/.test(url.pathname),
             handler: "NetworkFirst",

@@ -1,5 +1,14 @@
 # Hasil verifikasi MVP
 
+## Server AI Cloud Run & Cloudflare Pages — 7 November 2026
+
+- Server Node (onnxruntime-node + sharp) memakai `src/ai` yang sama dengan aplikasi (tiling, decoder YOLO, NMS).
+- Eksperimen foto noise 1200px: browser 39 deteksi; server dengan resize libvips 20, dengan JPEG 0.92 75–95, dengan resize bilinear gaya canvas + file asli 38. Karena itu server memakai `resizeTileBilinear` dan aplikasi mengirim file asli (PNG lossless untuk frame kamera live).
+- Foto sintetis 12MP (221 tiles): sekitar 24 detik di laptop pengujian 4 thread; browser PC satu thread sekitar 0,6 detik/tile.
+- Ukuran hasil decode server dicek terhadap ukuran canvas aplikasi (409 bila berbeda, aplikasi kirim ulang PNG).
+- Cross-origin isolation (`public/_headers`) mengaktifkan ONNX multi-thread di browser: 25 tiles sekitar 9 detik (sebelumnya sekitar 15 detik).
+- 45 unit tests lulus; typecheck aplikasi & server; browser test model asli, Mock, dan end-to-end via server lokal lulus. Image Docker dan Cloud Run belum diuji karena belum ada akun GCP; dibangun oleh Cloud Build saat deploy pertama.
+
 ## Perbaikan tren & offline ONNX — 6 November 2026
 
 - Grafik tren hanya menampilkan versi model terbaru beserta catatan jumlah pengamatan versi lain yang disembunyikan.

@@ -4,6 +4,7 @@ import { useApp } from "../state";
 import { DEFAULT_SETTINGS, type Settings } from "../types";
 import { currentUser, isDemo, signIn, signOut } from "../database/supabase";
 import { loadModelInfo, type InstalledModel } from "../ai/modelInfo";
+import { aiServerUrl } from "../ai/serverDetector";
 export function SettingsPage() {
   const { settings, saveSettings, sessions, sync, refresh } = useApp();
   const [value, setValue] = useState<Settings>(settings),
@@ -168,6 +169,21 @@ export function SettingsPage() {
             />
             Gunakan model ONNX jika tersedia
           </label>
+          {aiServerUrl && (
+            <label className="check-label">
+              <input
+                type="checkbox"
+                checked={value.useServer}
+                disabled={!value.preferOnnx}
+                onChange={(e) =>
+                  setValue({ ...value, useServer: e.target.checked })
+                }
+              />
+              Analisis di server AI saat online (lebih cepat; foto dikirim ke
+              server dan tidak disimpan di sana). Offline otomatis memakai model
+              di perangkat.
+            </label>
+          )}
           <p className="footnote">
             Threshold epidemiological/action level belum divalidasi dan hanya
             untuk prototype. Nilai kualitas foto perlu dikalibrasi pada
