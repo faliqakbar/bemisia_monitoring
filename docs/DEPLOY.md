@@ -1,9 +1,28 @@
-# Deploy: Cloud Run (server AI) + Cloudflare Pages (aplikasi)
+# Deploy: server AI (Modal / Cloud Run) + aplikasi (GitHub Pages / Cloudflare Pages)
 
-Urutannya: server AI dulu (untuk mendapatkan URL-nya), lalu aplikasi di Cloudflare Pages.
+Urutannya: server AI dulu (untuk mendapatkan URL-nya), lalu aplikasi.
 GitHub Actions menjalankan pemeriksaan (typecheck, test, build) dan, untuk sementara, men-deploy ke GitHub Pages pada setiap push ke `main`. Setelah Cloudflare Pages aktif, hapus job `deploy` di `.github/workflows/ci.yml`.
 
-## 1. Server AI di Google Cloud Run
+## 0. Server AI di Modal (dipakai sekarang)
+
+Google Cloud belum bisa dipakai (akun billing ditahan), jadi server AI berjalan di
+[Modal](https://modal.com): tanpa kartu kredit, kredit gratis bulanan, ditagih per detik saat dipakai.
+Konfigurasinya `modal_app.py`: 4 CPU, RAM 4 GB, maksimal 2 container, satu foto per container,
+siaga 5 menit setelah dipakai. URL: <https://faliqakbar--bemisia-ai-serve.us-east.modal.run>
+(`/health` menampilkan versi model).
+
+```sh
+.tools/python/cpython-3.11.18-windows-x86_64-none/python.exe -m venv .venv-modal
+.venv-modal/Scripts/python.exe -m pip install modal
+.venv-modal/Scripts/modal.exe token new          # sekali, login lewat browser
+.venv-modal/Scripts/modal.exe deploy modal_app.py
+```
+
+**Saat model diganti**, jalankan ulang `modal deploy modal_app.py` setelah `scripts/export-model.py`,
+agar server dan web memakai versi model yang sama. Workflow GitHub memakai URL di atas sebagai
+`VITE_AI_SERVER_URL`, kecuali repository variable dengan nama itu diisi.
+
+## 1. Server AI di Google Cloud Run (alternatif)
 
 Server ada di `server/` dan dibangun dari `Dockerfile` di root repository. Docker tidak
 perlu dipasang di komputer: Cloud Build membangun image di cloud.

@@ -10,3 +10,5 @@ test-results/
 model-work/
 server/node_modules/
 server/dist/
+.venv-modal/
+__pycache__/

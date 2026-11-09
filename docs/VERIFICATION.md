@@ -1,11 +1,19 @@
 # Hasil verifikasi MVP
 
+## Server AI di Modal — 9 November 2026
+
+- Deploy `modal_app.py` (4 CPU, 4 GB). `/health` menampilkan `bemisia-trial-v2-e1af752e74de`, sama dengan web.
+- Cold start sekitar 5,6 detik; foto sintetis 12MP (221 tiles) sekitar 15 detik inference, 17,5 detik total termasuk unggah dari Indonesia ke region us-east.
+- CORS preflight dari GitHub Pages: 204 dengan `Access-Control-Allow-Origin: *`.
+- `sharp` dinaikkan ke 0.35.5 (perbaikan celah libvips) dan `adm-zip` dipaksa ke 0.6.1; `npm audit` server 0 kerentanan. Hasil deteksi identik sebelum/sesudah (71 deteksi, confidence rata-rata sama).
+
 ## Model bemisia-trial-v2 — 9 November 2026
 
 - Sumber: `best_v2.pt` (sha256 `cf2d396a…`), YOLO11n satu kelas `bemisia`, dilatih pada `bemisia_tiled_320` (imgsz 640, 100 epoch). Metrik pelatihan: precision 0,769, recall 0,613, mAP50 0,72, mAP50-95 0,266; `val/cls_loss` 14,0 (jauh di atas `best (1).pt`: 1,13).
 - Ekspor ONNX lulus parity PyTorch/ONNX (selisih maksimum 0,00012). Versi hasil: `bemisia-trial-v2-e1af752e74de`.
 - Pada foto sintetis (elips putih di kartu kuning) v1 mendeteksi 71/70 dan 307/300, v2 mendeteksi 0: confidence tertinggi per tile hanya 0,003–0,036. Bisa berarti v2 menolak objek tiruan, atau confidence v2 secara umum terlalu rendah untuk ambang 0,25. **Belum diuji pada foto lapangan asli**; dipasang atas permintaan pengguna untuk pemeriksaan manual.
 - Hasil v2 memulai baseline tren baru (tidak dibandingkan dengan v1).
+- 9 November 2026: pengguna memeriksa v2 secara manual pada foto yellow trap asli di web; model mendeteksi Bemisia. Nol deteksi pada foto sintetis berarti v2 menolak objek tiruan, bukan gagal mendeteksi. Akurasi terhadap hitungan manual belum diukur secara sistematis.
 
 ## Server AI Cloud Run & Cloudflare Pages — 7 November 2026
 
