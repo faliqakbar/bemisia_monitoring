@@ -1,13 +1,13 @@
 {
-  "version": "bemisia-trial-v1",
-  "sha256": "3f577990f7778bef5b14789b8617310dc40c9a614de2549e80c0f52f8164c82f",
+  "version": "bemisia-trial-v2",
+  "sha256": "e1af752e74de5e63c60d1b96fb8e85ac3d8be0ad43ccaafd6d79db3ebb2b278d",
   "trial": true,
   "classNames": [
     "bemisia"
   ],
   "inputSize": 640,
-  "sourceSha256": "3deeeeeadf5b83e294d531e1a4867eda692746eb63a5dbe1a4150b85e21a955e",
-  "exportedAt": "2026-11-06T01:55:04.782734+00:00",
+  "sourceSha256": "cf2d396a097bc9a45f4e33cf1f0644482192f1879bbb57e2762afd27eb54c49a",
+  "exportedAt": "2026-11-09T06:50:15.847206+00:00",
   "ultralyticsVersion": "8.4.203",
   "opset": 17,
   "validation": {
@@ -22,8 +22,8 @@
       5,
       8400
     ],
-    "maxAbsoluteDifference": 0.00018310546875,
-    "maxConfidenceDifference": 1.1654219633783214e-07,
+    "maxAbsoluteDifference": 0.0001220703125,
+    "maxConfidenceDifference": 1.2670608384723892e-07,
     "pytorchOnnxParity": "passed",
     "providers": [
       "CPUExecutionProvider"

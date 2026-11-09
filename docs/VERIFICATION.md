@@ -1,5 +1,12 @@
 # Hasil verifikasi MVP
 
+## Model bemisia-trial-v2 — 9 November 2026
+
+- Sumber: `best_v2.pt` (sha256 `cf2d396a…`), YOLO11n satu kelas `bemisia`, dilatih pada `bemisia_tiled_320` (imgsz 640, 100 epoch). Metrik pelatihan: precision 0,769, recall 0,613, mAP50 0,72, mAP50-95 0,266; `val/cls_loss` 14,0 (jauh di atas `best (1).pt`: 1,13).
+- Ekspor ONNX lulus parity PyTorch/ONNX (selisih maksimum 0,00012). Versi hasil: `bemisia-trial-v2-e1af752e74de`.
+- Pada foto sintetis (elips putih di kartu kuning) v1 mendeteksi 71/70 dan 307/300, v2 mendeteksi 0: confidence tertinggi per tile hanya 0,003–0,036. Bisa berarti v2 menolak objek tiruan, atau confidence v2 secara umum terlalu rendah untuk ambang 0,25. **Belum diuji pada foto lapangan asli**; dipasang atas permintaan pengguna untuk pemeriksaan manual.
+- Hasil v2 memulai baseline tren baru (tidak dibandingkan dengan v1).
+
 ## Server AI Cloud Run & Cloudflare Pages — 7 November 2026
 
 - Server Node (onnxruntime-node + sharp) memakai `src/ai` yang sama dengan aplikasi (tiling, decoder YOLO, NMS).

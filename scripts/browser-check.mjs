@@ -1,11 +1,15 @@
 // Local Chrome smoke test using the built-in DevTools protocol; no paid tools or browser download.
 // First run npm run preview, then: node scripts/browser-check.mjs
 import { spawn } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 const base = process.env.TEST_BASE_URL || "http://localhost:4173";
 const realModel = process.env.TEST_REAL_MODEL === "1";
+// Version label the installed weights must show (public/models/model-info.json).
+const installedVersion = JSON.parse(
+  await readFile("public/models/model-info.json", "utf8"),
+).version;
 const executable =
   process.env.CHROME_PATH ||
   [
@@ -190,7 +194,7 @@ try {
   await waitFor(() => textIncludes("Hasil pengamatan"), "detection result");
   if (realModel) {
     if (
-      !(await textIncludes("bemisia-trial-v1")) ||
+      !(await textIncludes(installedVersion)) ||
       (await textIncludes("AI model belum tersedia"))
     ) {
       throw new Error(
@@ -261,7 +265,7 @@ try {
     await click("Analyze Bemisia");
     await waitFor(() => textIncludes("Hasil pengamatan"), `${label} result`);
     if (
-      !(await textIncludes("bemisia-trial-v1")) ||
+      !(await textIncludes(installedVersion)) ||
       (await textIncludes("AI model belum tersedia"))
     )
       throw new Error(

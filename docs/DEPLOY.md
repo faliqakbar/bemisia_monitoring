@@ -1,7 +1,7 @@
 # Deploy: Cloud Run (server AI) + Cloudflare Pages (aplikasi)
 
 Urutannya: server AI dulu (untuk mendapatkan URL-nya), lalu aplikasi di Cloudflare Pages.
-GitHub Actions hanya menjalankan pemeriksaan (typecheck, test, build) dan tidak men-deploy.
+GitHub Actions menjalankan pemeriksaan (typecheck, test, build) dan, untuk sementara, men-deploy ke GitHub Pages pada setiap push ke `main`. Setelah Cloudflare Pages aktif, hapus job `deploy` di `.github/workflows/ci.yml`.
 
 ## 1. Server AI di Google Cloud Run
 
