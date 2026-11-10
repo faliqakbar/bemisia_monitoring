@@ -29,11 +29,26 @@ export class SupabaseMonitoringRepository extends LocalMonitoringRepository {
     if (!user) return [];
     const db = await getDb();
     try {
-      const { data, error } = await supabase!
-        .from("monitoring_sessions")
-        .select("*");
-      if (error) throw error;
-      for (const row of data as MonitoringSession[]) {
+      // Supabase returns at most 1000 rows per request.
+      const data: MonitoringSession[] = [];
+      for (let from = 0; ; from += 1000) {
+        const { data: page, error } = await supabase!
+          .from("monitoring_sessions")
+          .select("*")
+          .order("captured_at", { ascending: false })
+          .range(from, from + 999);
+        if (error) throw error;
+        data.push(...(page as MonitoringSession[]));
+        if (page.length < 1000) break;
+      }
+      // Records deleted on the server disappear here too; unsynced ones are kept.
+      const onServer = new Set(data.map((row) => row.id));
+      for (const local of await db.getAll("sessions"))
+        if (local.sync_status === "synced" && !onServer.has(local.id)) {
+          await db.delete("sessions", local.id);
+          await db.delete("images", local.id);
+        }
+      for (const row of data) {
         const local = await db.get("sessions", row.id);
         if (local?.sync_status !== "pending")
           await db.put("sessions", {
