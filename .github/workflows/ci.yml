@@ -28,8 +28,9 @@ jobs:
       - run: npm run build
         env:
           VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH || format('/{0}/', github.event.repository.name) }}
-          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          # Publishable key only (safe in the browser; RLS protects the data). Never a secret key.
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || 'https://okpkavrplzhfpdncmgnb.supabase.co' }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY || 'sb_publishable__iIqMXnvbkVskcG7YDrt_A_TMwGp-3_' }}
           # Modal server (docs/DEPLOY.md); a repository variable overrides it.
           VITE_AI_SERVER_URL: ${{ vars.VITE_AI_SERVER_URL || 'https://faliqakbar--bemisia-ai-serve.us-east.modal.run' }}
       - run: npm run build --prefix server

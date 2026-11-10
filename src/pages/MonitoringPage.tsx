@@ -5,6 +5,7 @@ import { useApp } from "../state";
 import { TrapCard } from "../components/TrapCard";
 import { QRScanner } from "../components/QRScanner";
 import { AnalysisQueue } from "../components/AnalysisQueue";
+import { isDemo } from "../database/supabase";
 export function MonitoringPage() {
   const { greenhouses, traps, sessions } = useApp();
   const [selected, setSelected] = useState(""),
@@ -80,7 +81,17 @@ export function MonitoringPage() {
           ))}
         </div>
         {!active.length && (
-          <p>Belum ada greenhouse. Tambahkan melalui Kelola Trap.</p>
+          <p>
+            {isDemo ? (
+              "Belum ada greenhouse. Tambahkan melalui Kelola Trap."
+            ) : (
+              <>
+                Belum ada greenhouse. Belum login? Masuk dulu di{" "}
+                <Link to="/settings">Settings</Link>. Sudah login? Tambahkan
+                melalui Kelola Trap.
+              </>
+            )}
+          </p>
         )}
       </section>
       <section className="panel">
