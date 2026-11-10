@@ -21,6 +21,7 @@ import { trapRepository } from "./database/traps";
 import { monitoringRepository } from "./database/monitoring";
 import { seedDemo } from "./database/demo";
 import { getDb } from "./offline/db";
+import { ensureSession } from "./database/supabase";
 import { syncQueue } from "./offline/syncQueue";
 import {
   enqueueAnalysis,
@@ -99,6 +100,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     void (async () => {
       try {
         await seedDemo();
+        await ensureSession();
         const saved = await (await getDb()).get("meta", "settings");
         if (saved) setSettings({ ...DEFAULT_SETTINGS, ...(saved as Settings) });
         await refresh();

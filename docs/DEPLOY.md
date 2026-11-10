@@ -92,3 +92,14 @@ Buka situs Cloudflare → Settings → centang **Gunakan model ONNX jika tersedi
 
 Situs lama di GitHub Pages tidak diperbarui lagi. Data offline di browser terikat ke alamat
 situs, jadi sinkronkan atau ekspor data dari alamat lama sebelum pindah.
+
+## Supabase: tanpa layar login (tim kecil)
+
+Aplikasi masuk otomatis sebagai pengguna anonim bila perangkat belum punya sesi, dan semua
+pengguna yang masuk melihat seluruh hasil monitoring. Sekali saja di dashboard Supabase:
+
+1. **Authentication → Sign In / Providers → Allow anonymous sign-ins**: aktifkan.
+2. **SQL Editor**: jalankan `supabase/migrations/002_team_access.sql`.
+
+Login email di Settings tetap bisa dipakai. Karena situsnya publik, siapa pun yang membuka
+alamatnya dapat membaca dan menambah data; pakai cara ini hanya untuk data yang tidak sensitif.

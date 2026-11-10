@@ -21,6 +21,14 @@ export async function signOut() {
 export async function currentUser() {
   return (await supabase?.auth.getSession())?.data.session?.user ?? null;
 }
+// Two-person team: open the app without a login screen. A device with no session
+// gets an anonymous Supabase user (needs "Allow anonymous sign-ins" in the dashboard);
+// email login in Settings still works.
+export async function ensureSession() {
+  if (!supabase || (await currentUser())) return;
+  const { error } = await supabase.auth.signInAnonymously();
+  if (error) console.warn("Anonymous sign-in unavailable:", error.message);
+}
 export async function requireCloudUser() {
   if (!(await currentUser())) {
     throw new Error(

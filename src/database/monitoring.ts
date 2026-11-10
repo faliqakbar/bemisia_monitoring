@@ -31,8 +31,7 @@ export class SupabaseMonitoringRepository extends LocalMonitoringRepository {
     try {
       const { data, error } = await supabase!
         .from("monitoring_sessions")
-        .select("*")
-        .eq("owner_id", user.id);
+        .select("*");
       if (error) throw error;
       for (const row of data as MonitoringSession[]) {
         const local = await db.get("sessions", row.id);
@@ -46,7 +45,8 @@ export class SupabaseMonitoringRepository extends LocalMonitoringRepository {
     } catch {
       /* Cached records remain available offline. */
     }
-    return (await super.list()).filter((s) => s.owner_id === user.id);
+    // The whole team sees every record (supabase/migrations/002_team_access.sql).
+    return super.list();
   }
   async save(session: MonitoringSession, image?: Blob) {
     const user = await currentUser();

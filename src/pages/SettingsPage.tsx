@@ -10,12 +10,16 @@ export function SettingsPage() {
   const [value, setValue] = useState<Settings>(settings),
     [error, setError] = useState(""),
     [email, setEmail] = useState(""),
-    [busy, setBusy] = useState(false);
+    [busy, setBusy] = useState(false),
+    [automatic, setAutomatic] = useState(false);
   const [installedModel, setInstalledModel] = useState<InstalledModel | null>(
     null,
   );
   useEffect(() => {
-    void currentUser().then((u) => setEmail(u?.email ?? ""));
+    void currentUser().then((u) => {
+      setEmail(u?.email ?? "");
+      setAutomatic(!!u?.is_anonymous);
+    });
     void loadModelInfo()
       .then(setInstalledModel)
       .catch(() => setInstalledModel(null));
@@ -274,6 +278,12 @@ export function SettingsPage() {
               </>
             ) : (
               <form onSubmit={(e) => void login(e)}>
+                {automatic && (
+                  <p>
+                    Perangkat ini sudah masuk otomatis, tanpa akun. Login email
+                    tidak wajib; jika dipakai, sinkronkan data dulu.
+                  </p>
+                )}
                 <label>
                   Email
                   <input
