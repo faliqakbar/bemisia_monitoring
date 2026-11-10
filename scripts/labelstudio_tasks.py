@@ -18,6 +18,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--repo", default="liq30/bemisia-traps")
 parser.add_argument("--root", type=Path, required=True,
                     help="Folder Label Studio serves local files from")
+parser.add_argument("--check-below", type=float, default=0.40,
+                    help="Model boxes under this confidence get the cyan \"Cek\" label")
 parser.add_argument("--no-download", action="store_true",
                     help="Use the copy already in --root")
 args = parser.parse_args()
@@ -54,7 +56,10 @@ for label_file in sorted((dataset / "labels").glob("*.json")):
                 "width": p["width"] * 100,
                 "height": p["height"] * 100,
                 "rotation": 0,
-                "rectanglelabels": ["Bemisia"],
+                # Low-confidence boxes stand out in cyan so they are easy to find.
+                "rectanglelabels": [
+                    "Cek" if p["confidence"] < args.check_below else "Bemisia"
+                ],
             },
         }
         for i, p in enumerate(meta["predictions"])

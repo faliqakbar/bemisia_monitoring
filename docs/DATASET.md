@@ -59,8 +59,12 @@ Sekali: `python -m venv .venv-label` lalu
 4. *Settings → Cloud Storage → Add Source Storage → Local files*, path
    `C:/bemisia-labeling/bemisia-traps`. **Jangan** tekan *Sync* (tugas diimpor dari `tasks.json`).
 5. **Import** → pilih `C:/bemisia-labeling/tasks.json`. Box model muncul sebagai prediksi.
-6. Koreksi: hapus box yang bukan Bemisia, gambar box untuk serangga yang terlewat (tombol
-   `b`), rapikan posisi; zoom dengan scroll. *Submit* per foto.
+6. Koreksi: box **magenta** = Bemisia dari model, box **cyan "Cek"** = box model dengan
+   confidence di bawah 0,40 (`--check-below`), yang paling sering salah. Untuk setiap box Cek:
+   pilih box, lalu tekan `b` bila memang Bemisia (labelnya berubah) atau `Backspace` bila bukan.
+   Di panel *Regions*, kelompokkan *By Label* untuk melihat semua Cek sekaligus. Gambar box untuk
+   serangga yang terlewat (`b` lalu tarik), rapikan posisi; zoom `Ctrl` + scroll. **Tidak boleh
+   ada box Cek tersisa** sebelum *Submit*.
 7. **Export → YOLO** untuk training.
 
 Saat mengimpor ulang setelah foto baru masuk, buat project baru atau impor hanya tugas baru
