@@ -970,6 +970,22 @@ textarea {
   color: white;
   font-size: 23px;
 }
+/* Sits above the bottom notice so both can show at once; two classes so the
+   phone-size .toast rule (bottom: 90px) does not stretch it. */
+.toast.update-toast {
+  bottom: auto;
+  top: 16px;
+  z-index: 61;
+}
+.toast .update-reload {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  background: #e9d22b;
+  color: #183f34;
+  border-radius: 7px;
+  padding: 8px 12px;
+}
 @media (min-width: 1500px) {
   .main-content {
     margin-right: auto;

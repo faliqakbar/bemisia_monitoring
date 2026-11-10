@@ -10,6 +10,7 @@ import { DetectionResultPage } from "./pages/DetectionResultPage";
 import { TrapHistoryPage } from "./pages/TrapHistoryPage";
 import { TrapManagementPage } from "./pages/TrapManagementPage";
 import { SettingsPage } from "./pages/SettingsPage";
+import { UpdateBanner } from "./components/UpdateBanner";
 class ErrorBoundary extends Component<
   { children: ReactNode },
   { error: boolean }
@@ -67,6 +68,7 @@ function Shell() {
           </Routes>
         )}
       </main>
+      <UpdateBanner />
       {notice && (
         <div className="toast" role="status">
           {notice}

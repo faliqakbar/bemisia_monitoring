@@ -28,7 +28,8 @@ export default defineConfig(({ mode }) => ({
     tailwindcss(),
     VitePWA({
       registerType: "prompt",
-      injectRegister: "auto",
+      // Registered by src/components/UpdateBanner.tsx, which also offers updates.
+      injectRegister: false,
       manifest: false,
       includeAssets: ["icons/*.png", "manifest.webmanifest"],
       workbox: {
