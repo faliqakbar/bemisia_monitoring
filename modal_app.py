@@ -6,6 +6,7 @@ in src/ and the installed weights in public/models. Deploy from this folder:
     modal deploy modal_app.py
 """
 
+import os
 import subprocess
 
 import modal
@@ -38,6 +39,8 @@ app = modal.App("bemisia-ai", image=image)
     max_containers=2,
     # Stay warm for 5 minutes after a request so a series of traps avoids cold starts.
     scaledown_window=300,
+    # HF_TOKEN and HF_DATASET for /dataset (private Hugging Face dataset).
+    secrets=[modal.Secret.from_name("bemisia-hf")],
 )
 # One photo per container: an analysis uses every core.
 @modal.concurrent(max_inputs=1)
@@ -51,5 +54,7 @@ def serve():
             "PORT": "8080",
             "MODEL_DIR": "/app/models",
             "NODE_ENV": "production",
+            "HF_TOKEN": os.environ.get("HF_TOKEN", ""),
+            "HF_DATASET": os.environ.get("HF_DATASET", ""),
         },
     )

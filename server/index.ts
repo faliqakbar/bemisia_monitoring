@@ -21,6 +21,8 @@ import {
 import { modelIdentity, parseModelInfo } from "../src/ai/modelInfo";
 import { HttpError, parseExpectedSize, parseParams } from "./params";
 import { resizeTileBilinear } from "../src/ai/resample";
+import { uploadFiles } from "@huggingface/hub";
+import { datasetFiles, parseDatasetMeta, type DatasetMeta } from "./dataset";
 import type { Detection, DetectorResult } from "../src/ai/types";
 
 const PORT = Number(process.env.PORT ?? 8080);
@@ -35,6 +37,9 @@ const MAX_BODY_BYTES = 30 * 1024 * 1024;
 // Same ceiling the app applies before analysis.
 const MAX_PIXELS = 50_000_000;
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+// Private Hugging Face dataset for reviewed photos (Modal secret "bemisia-hf").
+const HF_TOKEN = process.env.HF_TOKEN ?? "";
+const HF_DATASET = process.env.HF_DATASET ?? "";
 
 async function loadModel() {
   const bytes = await readFile(path.join(MODEL_DIR, "bemisia.onnx"));
@@ -163,7 +168,69 @@ createServer(async (req, res) => {
       req.method === "GET" &&
       (url.pathname === "/" || url.pathname === "/health")
     ) {
-      send(res, 200, { ok: true, modelVersion: model.version });
+      send(res, 200, {
+        ok: true,
+        modelVersion: model.version,
+        dataset: !!(HF_TOKEN && HF_DATASET),
+      });
+    } else if (req.method === "POST" && url.pathname === "/dataset") {
+      if (!HF_TOKEN || !HF_DATASET)
+        throw new HttpError(503, "Dataset belum dikonfigurasi di server.");
+      const body = await readBody(req);
+      let form: FormData;
+      try {
+        form = await new Request("http://local/", {
+          method: "POST",
+          headers: { "content-type": req.headers["content-type"] ?? "" },
+          body: new Uint8Array(body),
+        }).formData();
+      } catch {
+        throw new HttpError(400, "Kirim foto dan metadata sebagai form-data.");
+      }
+      const photo = form.get("photo"),
+        rawMeta = form.get("meta");
+      if (!(photo instanceof Blob) || !IMAGE_TYPES.includes(photo.type))
+        throw new HttpError(415, "Foto dataset harus JPEG, PNG, atau WebP.");
+      let meta: DatasetMeta;
+      try {
+        meta = parseDatasetMeta(JSON.parse(String(rawMeta)));
+      } catch (error) {
+        if (error instanceof HttpError) throw error;
+        throw new HttpError(400, "Metadata dataset bukan JSON.");
+      }
+      const bytes = Buffer.from(await photo.arrayBuffer());
+      // Boxes are in the app's upright canvas; the stored file must match it.
+      const info = await sharp(bytes, { limitInputPixels: MAX_PIXELS })
+        .metadata()
+        .catch(() => {
+          throw new HttpError(415, "Foto dataset tidak dapat dibaca.");
+        });
+      const turned = (info.orientation ?? 1) >= 5;
+      const [w, h] = turned
+        ? [info.height, info.width]
+        : [info.width, info.height];
+      if (w !== meta.width || h !== meta.height)
+        throw new HttpError(409, "Ukuran foto dataset berbeda dari aplikasi.");
+      const files = datasetFiles(meta, photo.type);
+      await uploadFiles({
+        repo: { type: "dataset", name: HF_DATASET },
+        accessToken: HF_TOKEN as `hf_${string}`,
+        commitTitle: `Add ${meta.label} ${meta.captured_at}`,
+        files: [
+          {
+            path: files.image,
+            content: new Blob([bytes], { type: photo.type }),
+          },
+          {
+            path: files.labelPath,
+            content: new Blob([JSON.stringify(files.label, null, 1)], {
+              type: "application/json",
+            }),
+          },
+        ],
+      });
+      console.log(`dataset ${files.image} boxes=${meta.detections.length}`);
+      send(res, 200, { ok: true, image: files.image });
     } else if (req.method === "POST" && url.pathname === "/detect") {
       const type = (req.headers["content-type"] ?? "").split(";")[0].trim();
       if (!IMAGE_TYPES.includes(type))
@@ -190,7 +257,7 @@ createServer(async (req, res) => {
       send(res, error.status, { error: error.message });
     else {
       console.error(error);
-      send(res, 500, { error: "Analisis gagal di server." });
+      send(res, 500, { error: "Permintaan gagal di server." });
     }
   }
 }).listen(PORT, () => console.log(`Listening on ${PORT}`));

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { parseExpectedSize, parseParams } from "../server/params";
+import { datasetFiles, parseDatasetMeta } from "../server/dataset";
 import { resizeTileBilinear } from "../src/ai/resample";
 import { parseServerResult } from "../src/ai/serverDetector";
 import { decodeYolo, toPlanar } from "../src/ai/yolo";
@@ -130,5 +131,51 @@ describe("expected photo size", () => {
       expect(() => parseExpectedSize(new URLSearchParams(q))).toThrow(
         "bilangan bulat",
       );
+  });
+});
+
+describe("dataset metadata", () => {
+  const meta = {
+    id: "3f2a9c1e-0000-4000-8000-000000000001",
+    label: "GH12 / T01",
+    trap_id: "00000000-0000-4000-8000-000000000011",
+    captured_at: "2026-11-10T03:00:00.000Z",
+    model_version: "bemisia-trial-v2-e1af752e74de",
+    width: 1600,
+    height: 1200,
+    feedback: "needs_review",
+    notes: "box terlewat di pojok",
+    bemisia_count: 1,
+    exposure_days: 7,
+    detections: [{ x1: 160, y1: 120, x2: 176, y2: 132, confidence: 0.8 }],
+  };
+  it("accepts a reviewed photo and stores boxes as fractions of the photo", () => {
+    const files = datasetFiles(parseDatasetMeta(meta), "image/jpeg");
+    expect(files.image).toBe(
+      "images/2026-11/3f2a9c1e-0000-4000-8000-000000000001.jpg",
+    );
+    expect(files.labelPath).toBe(
+      "labels/3f2a9c1e-0000-4000-8000-000000000001.json",
+    );
+    expect(files.label.predictions[0]).toEqual({
+      x: 0.1,
+      y: 0.1,
+      width: 0.01,
+      height: 0.01,
+      confidence: 0.8,
+    });
+  });
+  it("rejects unsafe paths, bad boxes and unknown feedback", () => {
+    for (const bad of [
+      { ...meta, id: "../../etc" },
+      { ...meta, label: "<script>" },
+      { ...meta, detections: [{ x1: 5, y1: 5, x2: 1, y2: 1, confidence: 1 }] },
+      { ...meta, feedback: "maybe" },
+      { ...meta, width: 0 },
+    ])
+      expect(() => parseDatasetMeta(bad)).toThrow("tidak valid");
+    expect(() => datasetFiles(parseDatasetMeta(meta), "image/gif")).toThrow(
+      "tipe foto",
+    );
   });
 });

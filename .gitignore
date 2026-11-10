@@ -12,3 +12,4 @@ server/node_modules/
 server/dist/
 .venv-modal/
 __pycache__/
+.venv-label/

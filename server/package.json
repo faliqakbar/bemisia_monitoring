@@ -4,10 +4,11 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "build": "esbuild index.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/index.mjs --external:onnxruntime-node --external:sharp",
+    "build": "esbuild index.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/index.mjs --external:onnxruntime-node --external:sharp --external:@huggingface/hub",
     "start": "node dist/index.mjs"
   },
   "dependencies": {
+    "@huggingface/hub": "^2.17.10",
     "onnxruntime-node": "1.23.2",
     "sharp": "^0.35.5"
   },

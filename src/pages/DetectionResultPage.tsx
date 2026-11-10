@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useApp } from "../state";
 import { DetectionCanvas } from "../components/DetectionCanvas";
@@ -10,6 +10,7 @@ import { formatDate } from "../utils/date";
 import { compressedImage } from "../utils/image";
 import { monitoringRepository } from "../database/monitoring";
 import { isDemo } from "../database/supabase";
+import { datasetAvailable, sendToDataset } from "../ai/datasetUpload";
 import type { MonitoringSession } from "../types";
 export function DetectionResultPage() {
   const {
@@ -38,10 +39,16 @@ export function DetectionResultPage() {
       useState<MonitoringSession["feedback_status"]>("unreviewed"),
     [saving, setSaving] = useState(false),
     [error, setError] = useState(""),
-    [review, setReview] = useState(false);
+    [review, setReview] = useState(false),
+    [toDataset, setToDataset] = useState(false),
+    [canDataset, setCanDataset] = useState(false),
+    [savingMessage, setSavingMessage] = useState("Saving result...");
   const id = useRef(crypto.randomUUID()),
     savingRef = useRef(false);
   const navigate = useNavigate();
+  useEffect(() => {
+    void datasetAvailable().then(setCanDataset);
+  }, []);
   if (!draft)
     return (
       <section className="panel">
@@ -121,10 +128,31 @@ export function DetectionResultPage() {
       // Saved: the queued copy is no longer needed.
       if (draft.jobId) await deleteJob(draft.jobId);
       await refresh();
+      // The monitoring record is safe locally; a dataset failure only adds a note.
+      let datasetNote = "";
+      if (toDataset && canDataset) {
+        setSavingMessage("Mengirim foto ke dataset...");
+        try {
+          await sendToDataset({
+            draft,
+            sessionId: session.id,
+            label: (gh?.code ?? "GH") + " / " + draft.trap.trap_code,
+            exposureDays: exposure,
+            feedback,
+            notes,
+          });
+          datasetNote = " Foto masuk dataset.";
+        } catch (e) {
+          datasetNote =
+            " Gagal masuk dataset: " +
+            (e instanceof Error ? e.message : "coba lagi nanti") +
+            ".";
+        }
+      }
       notify(
-        isDemo
+        (isDemo
           ? "Monitoring tersimpan di perangkat ini."
-          : "Monitoring tersimpan di perangkat — PENDING SYNC.",
+          : "Monitoring tersimpan di perangkat — PENDING SYNC.") + datasetNote,
       );
       setDraft(null);
       navigate(`/history/${session.trap_id}`);
@@ -213,11 +241,26 @@ export function DetectionResultPage() {
               <button
                 className={`button ${feedback === "needs_review" ? "selected" : ""}`}
                 aria-pressed={feedback === "needs_review"}
-                onClick={() => setFeedback("needs_review")}
+                onClick={() => {
+                  setFeedback("needs_review");
+                  // Photos the model got wrong are the most useful for retraining.
+                  setToDataset(true);
+                }}
               >
                 ⚠ Perlu Koreksi
               </button>
             </div>
+            {canDataset && (
+              <label className="check-label">
+                <input
+                  type="checkbox"
+                  checked={toDataset}
+                  onChange={(e) => setToDataset(e.target.checked)}
+                />
+                Masukkan ke dataset (foto asli + box AI) untuk dikoreksi dan
+                melatih ulang model
+              </label>
+            )}
           </section>
         </div>
         <div>
@@ -250,7 +293,7 @@ export function DetectionResultPage() {
           {error}
         </p>
       )}
-      {saving && <LoadingOverlay message="Saving result..." />}
+      {saving && <LoadingOverlay message={savingMessage} />}
     </>
   );
 }
