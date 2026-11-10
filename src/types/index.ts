@@ -103,6 +103,8 @@ export const DEFAULT_SETTINGS: Settings = {
   minResolution: 1000,
   blurRetake: 25,
   blurWarning: 70,
-  preferOnnx: false,
+  // The installed model (and the AI server while online) is used on a new device
+  // without visiting Settings; Simulation Mode is opt-in.
+  preferOnnx: true,
   useServer: true,
 };

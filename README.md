@@ -72,7 +72,7 @@ Rujukan RLS Storage: [Supabase access control](https://supabase.com/docs/guides/
 
 ## AI Model
 
-Model percobaan dari `best.pt` lama pengguna sudah diekspor ke `public/models/bemisia.onnx` (YOLO11n, satu kelas `bemisia`, sekitar 10.7 MB). Aktifkan **Gunakan model ONNX jika tersedia** di Settings lalu **Simpan Pengaturan**. Hasil harus menampilkan `ONNX · EXPERIMENTAL` dan versi `bemisia-trial-v1-...`. Jika model tidak tersedia/tidak kompatibel/gagal inference, fallback Mock dengan peringatan yang jelas.
+Model percobaan `bemisia-trial-v2` (dari `best_v2.pt`, YOLO11n, satu kelas `bemisia`, sekitar 10.7 MB) terpasang di `public/models/bemisia.onnx` dan di server AI. **Gunakan model ONNX jika tersedia** dan **Analisis di server AI saat online** aktif secara bawaan, jadi perangkat baru langsung memakai model tanpa menyimpan pengaturan; hapus centang ONNX hanya untuk Simulation Mode. Pengaturan disimpan per perangkat. Hasil menampilkan `ONNX · EXPERIMENTAL` dan versi model. Jika model tidak tersedia/tidak kompatibel/gagal inference, fallback Mock dengan peringatan yang jelas.
 
 Lihat [MODEL_INTEGRATION.md](docs/MODEL_INTEGRATION.md) untuk ekspor model pengganti menggunakan `scripts/export-model.py`. Script memperbarui ONNX dan `public/models/model-info.json`; versi ditambah fingerprint SHA256 otomatis, tanpa mengubah source UI. Model percobaan belum divalidasi akurasinya pada foto lapangan; hasil lama tidak berubah saat model diganti.
 

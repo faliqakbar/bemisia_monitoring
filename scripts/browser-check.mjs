@@ -159,7 +159,15 @@ try {
   );
   await navigate("/settings");
   await waitFor(() => textIncludes("Detection settings"), "settings");
-  await evaluate(`document.querySelector('input[type=checkbox]').click()`);
+  // A fresh browser must use the model without saving settings first.
+  if (
+    !(await evaluate("document.querySelector('input[type=checkbox]').checked"))
+  )
+    throw new Error("ONNX should be enabled by default on a new device");
+  // ONNX is on by default; the test still saves settings to check persistence.
+  await evaluate(
+    `(()=>{const b=document.querySelector('input[type=checkbox]');if(!b.checked)b.click()})()`,
+  );
   await click("Simpan Pengaturan");
   await waitFor(
     () => textIncludes("Pengaturan tersimpan."),

@@ -132,12 +132,13 @@ export function SettingsPage() {
               <strong>Model tersedia: {installedModel.version}</strong>
               <p>
                 {installedModel.trial
-                  ? "Model percobaan dari best.pt lama; akurasi lapangan belum divalidasi."
+                  ? "Model percobaan; akurasi lapangan belum divalidasi."
                   : "Model ONNX tersedia untuk analisis di perangkat."}
               </p>
               <p>
-                Centang “Gunakan model ONNX jika tersedia”, lalu Simpan
-                Pengaturan untuk memakai model ini.
+                {value.preferOnnx
+                  ? "Model ini dipakai untuk analisis. Hapus centang “Gunakan model ONNX jika tersedia” hanya untuk Simulation Mode."
+                  : "Simulation Mode aktif. Centang “Gunakan model ONNX jika tersedia”, lalu Simpan Pengaturan untuk memakai model ini."}
               </p>
             </div>
           )}
