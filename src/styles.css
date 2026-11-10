@@ -1095,6 +1095,15 @@ textarea {
   .navigation > a.active:after {
     display: none;
   }
+  /* Bottom bar: pin the count to the icon's corner instead of stacking it. */
+  .navigation > a {
+    position: relative;
+  }
+  .nav-badge {
+    position: absolute;
+    top: 2px;
+    left: calc(50% + 6px);
+  }
   .nav-heading,
   .sidebar-note {
     display: none;
@@ -1289,4 +1298,59 @@ textarea {
   .spinner {
     animation: none;
   }
+}
+
+/* Background analysis queue (components/AnalysisQueue.tsx). */
+.analysis-queue ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.queue-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #e1e5dc;
+  border-radius: 10px;
+  background: #fbfbf8;
+}
+.queue-item > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.queue-item small {
+  color: #768073;
+}
+.queue-item span {
+  font-size: 13px;
+  color: #315239;
+}
+.queue-item.done {
+  border-color: #b9d1a8;
+  background: #f1f7ec;
+}
+.queue-item.failed span {
+  color: #a33a2a;
+}
+.queue-item .button-row {
+  margin: 0;
+}
+.nav-badge {
+  margin-left: auto;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #e9d22b;
+  color: #183f34;
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
 }

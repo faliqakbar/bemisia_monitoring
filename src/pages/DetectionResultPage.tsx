@@ -12,8 +12,16 @@ import { monitoringRepository } from "../database/monitoring";
 import { isDemo } from "../database/supabase";
 import type { MonitoringSession } from "../types";
 export function DetectionResultPage() {
-  const { draft, setDraft, sessions, greenhouses, settings, refresh, notify } =
-    useApp();
+  const {
+    draft,
+    setDraft,
+    sessions,
+    greenhouses,
+    settings,
+    refresh,
+    notify,
+    deleteJob,
+  } = useApp();
   const [days, setDays] = useState(() => {
       if (!draft?.trap.installation_date) return "";
       return String(
@@ -110,6 +118,8 @@ export function DetectionResultPage() {
         session,
         await compressedImage(draft.image),
       );
+      // Saved: the queued copy is no longer needed.
+      if (draft.jobId) await deleteJob(draft.jobId);
       await refresh();
       notify(
         isDemo

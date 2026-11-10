@@ -1,4 +1,5 @@
 import { NavLink } from "react-router-dom";
+import { useApp } from "../state";
 import {
   LayoutDashboard,
   ScanLine,
@@ -13,6 +14,9 @@ const links = [
   { to: "/settings", label: "Settings", icon: Settings2 },
 ];
 export function BottomNavigation() {
+  const { jobs } = useApp();
+  // Finished background analyses waiting for review.
+  const ready = jobs.filter((j) => j.status === "done").length;
   return (
     <nav className="navigation" aria-label="Navigasi utama">
       <div className="nav-heading">WORKSPACE</div>
@@ -20,6 +24,14 @@ export function BottomNavigation() {
         <NavLink key={to} to={to} end={to === "/"}>
           <Icon size={21} />
           <span>{label}</span>
+          {to === "/monitoring" && ready > 0 && (
+            <b
+              className="nav-badge"
+              aria-label={ready + " hasil siap direview"}
+            >
+              {ready}
+            </b>
+          )}
         </NavLink>
       ))}
       <div className="sidebar-note">

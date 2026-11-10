@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, ScanLine } from "lucide-react";
+import { ArrowLeft, ScanLine, ListPlus } from "lucide-react";
 import { useApp } from "../state";
 import { CameraCapture } from "../components/CameraCapture";
 import { ImageQualityCard } from "../components/ImageQualityCard";
@@ -13,9 +13,21 @@ import {
 } from "../imageQuality/qualityEvaluator";
 import { detectImage } from "../ai/detector";
 import { formatDate } from "../utils/date";
+// A fresh page per trap, so a photo taken for one trap never carries over to another.
 export function CapturePage() {
   const { trapId } = useParams();
-  const { traps, greenhouses, sessions, settings, setDraft } = useApp();
+  return <TrapCapture key={trapId} trapId={trapId} />;
+}
+function TrapCapture({ trapId }: { trapId?: string }) {
+  const {
+    traps,
+    greenhouses,
+    sessions,
+    settings,
+    setDraft,
+    queueAnalysis,
+    notify,
+  } = useApp();
   const trap = traps.find((t) => t.id === trapId),
     gh = greenhouses.find((g) => g.id === trap?.greenhouse_id),
     last = sessions.find((s) => s.trap_id === trapId);
@@ -63,6 +75,29 @@ export function CapturePage() {
       navigate("/result");
     } catch {
       setError("Analisis gagal. Foto tetap tersedia; coba kembali.");
+    } finally {
+      setProgress("");
+    }
+  }
+  // Queue the photo and go straight back to choose the next trap.
+  async function analyzeInBackground() {
+    if (!image || !quality || !trap || !gh || quality.status === "RETAKE")
+      return;
+    setProgress("Menyimpan foto ke antrean...");
+    try {
+      await queueAnalysis({
+        trap,
+        label: gh.code + " / " + trap.trap_code,
+        image,
+        quality,
+        capturedAt,
+      });
+      notify("Foto masuk antrean analisis. Lanjut ke trap berikutnya.");
+      navigate("/monitoring");
+    } catch (e) {
+      setError(
+        e instanceof Error ? e.message : "Foto gagal masuk antrean; coba lagi.",
+      );
     } finally {
       setProgress("");
     }
@@ -125,11 +160,24 @@ export function CapturePage() {
               <button
                 className="button primary full"
                 disabled={quality.status === "RETAKE" || !!progress}
+                onClick={() => void analyzeInBackground()}
+              >
+                <ListPlus size={18} />
+                Analyze di latar &amp; lanjut
+              </button>
+              <button
+                className="button full"
+                disabled={quality.status === "RETAKE" || !!progress}
                 onClick={() => void analyze()}
               >
                 <ScanLine size={18} />
-                Analyze Bemisia
+                Analyze &amp; tunggu hasil
               </button>
+              <p className="muted small">
+                Di latar: foto dianalisis sambil Anda memotret trap lain; hasil
+                muncul di Monitoring untuk direview. Biarkan aplikasi tetap
+                terbuka.
+              </p>
             </>
           ) : (
             <section className="panel guidance">

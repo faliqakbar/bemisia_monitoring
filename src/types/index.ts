@@ -58,6 +58,25 @@ export interface Draft {
   result: DetectorResult;
   capturedAt: string;
   totalMs: number;
+  // Set when the draft came from the background analysis queue.
+  jobId?: string;
+}
+// A photo waiting for, or finished with, background analysis (src/offline/analysisQueue.ts).
+export interface AnalysisJob {
+  id: string;
+  trap_id: string;
+  label: string;
+  captured_at: string;
+  created_at: string;
+  quality: QualityResult;
+  // Detection settings at the moment the photo was queued.
+  settings: Settings;
+  file_name: string;
+  status: "waiting" | "processing" | "done" | "failed";
+  attempts: number;
+  result?: DetectorResult;
+  total_ms?: number;
+  error?: string;
 }
 export interface Settings {
   confidence: number;

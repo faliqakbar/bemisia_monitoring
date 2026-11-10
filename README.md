@@ -30,6 +30,8 @@ PWA diaktifkan pada build produksi. Buka sekali secara online, tunggu service wo
 - Live camera dengan panduan bingkai, input capture kamera perangkat, atau upload galeri.
 - Quality check: resolusi, variance of Laplacian, luminansi, estimasi highlight. Status GOOD/WARNING/RETAKE; RETAKE memblokir analisis.
 - Mock deterministic dari piksel, tiling 320/25%, global NMS, model version, progress per tile.
+- **Analyze di latar & lanjut**: foto masuk antrean (tersimpan di IndexedDB) dan dianalisis satu per satu selama aplikasi terbuka, sementara pengguna memotret trap berikutnya. Hasil muncul di panel Antrean analisis (Monitoring, dengan angka di menu) untuk direview lalu disimpan. Antrean yang terputus dilanjutkan saat aplikasi dibuka lagi. "Analyze & tunggu hasil" tetap tersedia.
+- Banner "Versi baru aplikasi tersedia" dengan tombol Muat ulang; aplikasi memeriksa versi baru tiap 30 menit dan saat kembali dibuka.
 - Review foto asli dengan zoom, pan, toggle box/nomor/confidence; feedback dan catatan.
 - Normalisasi Bemisia/hari berdasarkan lama pemasangan, histori, dan ambang Watch/High configurable.
 - CRUD greenhouse/trap (tambah GH, tambah/edit/nonaktifkan trap); QR PNG dapat diunduh.

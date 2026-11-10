@@ -183,14 +183,17 @@ try {
   await click("Pilih Trap");
   await waitFor(() => textIncludes("Upload dari Galeri"), "capture");
   await upload(1200);
-  await waitFor(() => textIncludes("Analyze Bemisia"), "quality evaluation");
+  await waitFor(
+    () => textIncludes("Analyze & tunggu hasil"),
+    "quality evaluation",
+  );
   if (
     await evaluate(
-      `[...document.querySelectorAll('button')].find(b=>b.textContent.includes('Analyze Bemisia')).disabled`,
+      `[...document.querySelectorAll('button')].find(b=>b.textContent.includes('Analyze & tunggu hasil')).disabled`,
     )
   )
     throw new Error("Valid generated image was rejected");
-  await click("Analyze Bemisia");
+  await click("Analyze & tunggu hasil");
   await waitFor(() => textIncludes("Hasil pengamatan"), "detection result");
   if (realModel) {
     if (
@@ -248,10 +251,38 @@ try {
   await waitFor(() => textIncludes("Resolusi minimum"), "resolution rejection");
   if (
     !(await evaluate(
-      `[...document.querySelectorAll('button')].find(b=>b.textContent.includes('Analyze Bemisia')).disabled`,
+      `[...document.querySelectorAll('button')].find(b=>b.textContent.includes('Analyze & tunggu hasil')).disabled`,
     ))
   )
     throw new Error("Low resolution image was not blocked");
+  // Background queue: analyse while choosing the next trap, then review and save.
+  await navigate("/capture/00000000-0000-4000-8000-000000000012");
+  await waitFor(() => textIncludes("Upload dari Galeri"), "queue capture");
+  await upload(1200);
+  await waitFor(
+    () => textIncludes("Analyze di latar & lanjut"),
+    "queue quality",
+  );
+  await click("Analyze di latar & lanjut");
+  await waitFor(() => textIncludes("Antrean analisis"), "queue panel");
+  await waitFor(
+    () =>
+      evaluate(
+        "[...document.querySelectorAll('button')].some(b=>b.textContent.trim()==='Review')",
+      ),
+    "queued analysis finished",
+  );
+  await click("Review");
+  await waitFor(() => textIncludes("Hasil pengamatan"), "queued result");
+  await click("Save Monitoring");
+  await waitFor(
+    () => evaluate("location.hash.startsWith('#/history/')"),
+    "queued result saved",
+  );
+  await navigate("/monitoring");
+  await pause(500);
+  if (await textIncludes("Antrean analisis"))
+    throw new Error("Saved result is still in the queue");
   await navigate("/");
   await waitFor(
     () => evaluate("!!navigator.serviceWorker.controller"),
@@ -261,8 +292,11 @@ try {
     await navigate("/capture/00000000-0000-4000-8000-000000000013");
     await waitFor(() => textIncludes("Upload dari Galeri"), `${label} capture`);
     await upload(1200);
-    await waitFor(() => textIncludes("Analyze Bemisia"), `${label} quality`);
-    await click("Analyze Bemisia");
+    await waitFor(
+      () => textIncludes("Analyze & tunggu hasil"),
+      `${label} quality`,
+    );
+    await click("Analyze & tunggu hasil");
     await waitFor(() => textIncludes("Hasil pengamatan"), `${label} result`);
     if (
       !(await textIncludes(installedVersion)) ||
@@ -290,7 +324,7 @@ try {
   if (errors.length)
     throw new Error(`Browser exceptions: ${JSON.stringify(errors)}`);
   console.log(
-    `PASS: desktop/mobile dashboard, no mobile overflow, settings, invalid/valid QR, image upload, quality gate, ${realModel ? "real ONNX inference" : "missing ONNX fallback"}, full resolution viewer, feedback, save, persistence, offline PWA reload${realModel ? ", offline ONNX inference" : ""}.`,
+    `PASS: desktop/mobile dashboard, no mobile overflow, settings, invalid/valid QR, image upload, quality gate, ${realModel ? "real ONNX inference" : "missing ONNX fallback"}, full resolution viewer, feedback, save, persistence, background queue, offline PWA reload${realModel ? ", offline ONNX inference" : ""}.`,
   );
 } finally {
   if (socket?.readyState === 1) {

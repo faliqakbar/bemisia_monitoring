@@ -4,6 +4,7 @@ import { ScanLine, Plus, Warehouse } from "lucide-react";
 import { useApp } from "../state";
 import { TrapCard } from "../components/TrapCard";
 import { QRScanner } from "../components/QRScanner";
+import { AnalysisQueue } from "../components/AnalysisQueue";
 export function MonitoringPage() {
   const { greenhouses, traps, sessions } = useApp();
   const [selected, setSelected] = useState(""),
@@ -50,6 +51,7 @@ export function MonitoringPage() {
         <span>02 Ambil foto</span>
         <span>03 Hasil deteksi</span>
       </div>
+      <AnalysisQueue />
       <section className="panel">
         <div className="section-head">
           <h2>1. Pilih greenhouse</h2>
