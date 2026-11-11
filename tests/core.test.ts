@@ -7,16 +7,14 @@ import {
   percentChange,
   trendStatus,
 } from "../src/utils/trend";
-import {
-  scoreQuality,
-  trapCoverageCheck,
-} from "../src/imageQuality/qualityEvaluator";
+import { scoreQuality } from "../src/imageQuality/qualityEvaluator";
 import { blurCheck } from "../src/imageQuality/blurCheck";
 import {
   brightnessCheck,
   luminances,
 } from "../src/imageQuality/brightnessCheck";
 import { glareCheck } from "../src/imageQuality/glareCheck";
+import { isTrapYellow, trapCoverage } from "../src/imageQuality/trapCheck";
 import { DEFAULT_SETTINGS } from "../src/types";
 import type { Detection } from "../src/ai/types";
 const box: Detection = {
@@ -133,14 +131,38 @@ describe("quality", () => {
     sharpnessScore: 100,
     brightness: 170,
     glarePercent: 2,
+    trapCoverage: 0.9,
   };
-  it("accepts a well lit sharp photo and does not assert coverage", () => {
+  it("accepts a well lit sharp photo of a trap", () => {
     expect(scoreQuality(good, DEFAULT_SETTINGS)).toMatchObject({
       status: "GOOD",
       qualityScore: 100,
-      coverage: "UNKNOWN",
     });
-    expect(trapCoverageCheck()).toBe("UNKNOWN");
+  });
+  it("blocks a sharp photo without a trap and warns when the trap is small", () => {
+    const room = scoreQuality(
+      { ...good, trapCoverage: 0.01 },
+      DEFAULT_SETTINGS,
+    );
+    expect(room.status).toBe("RETAKE");
+    expect(room.messages[0]).toContain("Yellow trap tidak terlihat");
+    expect(
+      scoreQuality({ ...good, trapCoverage: 0.25 }, DEFAULT_SETTINGS).status,
+    ).toBe("WARNING");
+  });
+  it("recognises trap yellow but not white, wood, beige or green", () => {
+    expect(isTrapYellow(227, 197, 53)).toBe(true); // card
+    expect(isTrapYellow(150, 128, 30)).toBe(true); // card in shade
+    for (const [r, g, b] of [
+      [250, 250, 245], // white wall
+      [150, 90, 40], // wood
+      [225, 210, 180], // beige
+      [60, 140, 60], // leaf
+      [40, 35, 10], // dark
+    ])
+      expect(isTrapYellow(r, g, b)).toBe(false);
+    // Half yellow, half white RGBA pixels.
+    expect(trapCoverage([227, 197, 53, 255, 250, 250, 245, 255])).toBe(0.5);
   });
   it("blocks low resolution, blur, severe darkness and glare", () => {
     for (const patch of [

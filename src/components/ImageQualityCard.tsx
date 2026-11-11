@@ -26,6 +26,15 @@ export function ImageQualityCard({ quality: q }: { quality: QualityResult }) {
             {q.width} × {q.height}
           </strong>
         </div>
+        <div>
+          <small>Yellow trap</small>
+          {/* Queued photos from before this check have no coverage value. */}
+          <strong>
+            {typeof q.trapCoverage === "number"
+              ? `${Math.round(q.trapCoverage * 100)}% foto`
+              : "—"}
+          </strong>
+        </div>
       </div>
       <p>
         Skor kualitas <strong>{q.qualityScore}/100</strong>
@@ -34,7 +43,8 @@ export function ImageQualityCard({ quality: q }: { quality: QualityResult }) {
         <p key={m}>{m}</p>
       ))}
       <small>
-        Cakupan trap & sudut kamera: UNKNOWN — periksa secara manual.
+        Keberadaan trap diperiksa dari warna kuning; sudut kamera tetap periksa
+        secara manual.
       </small>
     </section>
   );

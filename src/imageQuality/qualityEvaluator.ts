@@ -2,6 +2,11 @@ import { luminances, brightnessCheck } from "./brightnessCheck";
 import { blurCheck } from "./blurCheck";
 import { glareCheck } from "./glareCheck";
 import { resolutionCheck } from "./resolutionCheck";
+import {
+  TRAP_MISSING_BELOW,
+  TRAP_SMALL_BELOW,
+  trapCoverage,
+} from "./trapCheck";
 import type { Settings } from "../types";
 export interface QualityMetrics {
   width: number;
@@ -9,16 +14,14 @@ export interface QualityMetrics {
   sharpnessScore: number;
   brightness: number;
   glarePercent: number;
+  // Fraction 0..1 of the photo that is yellow-trap coloured (trapCheck.ts).
+  trapCoverage: number;
 }
 export interface QualityResult extends QualityMetrics {
   qualityScore: number;
   status: "GOOD" | "WARNING" | "RETAKE";
   messages: string[];
-  coverage: "UNKNOWN";
   resolutionGood: boolean;
-}
-export function trapCoverageCheck(): "UNKNOWN" {
-  return "UNKNOWN";
 }
 export function scoreQuality(
   m: QualityMetrics,
@@ -34,6 +37,18 @@ export function scoreQuality(
     );
     penalty += 50;
     retake = true;
+  }
+  if (m.trapCoverage < TRAP_MISSING_BELOW) {
+    messages.push(
+      "Yellow trap tidak terlihat di foto. Arahkan kamera ke trap lalu foto ulang.",
+    );
+    penalty += 60;
+    retake = true;
+  } else if (m.trapCoverage < TRAP_SMALL_BELOW) {
+    messages.push(
+      "Trap hanya sebagian kecil foto. Dekatkan kamera agar trap memenuhi bingkai.",
+    );
+    penalty += 20;
   }
   if (m.sharpnessScore < s.blurRetake) {
     messages.push("Foto terlalu blur. Silakan ambil ulang.");
@@ -66,7 +81,6 @@ export function scoreQuality(
     qualityScore: Math.max(0, 100 - penalty),
     status: retake ? "RETAKE" : penalty ? "WARNING" : "GOOD",
     messages: messages.length ? messages : ["Foto siap dianalisis"],
-    coverage: trapCoverageCheck(),
   };
 }
 export function evaluateQuality(image: HTMLCanvasElement, s: Settings) {
@@ -76,7 +90,8 @@ export function evaluateQuality(image: HTMLCanvasElement, s: Settings) {
   canvas.height = Math.max(3, Math.round(image.height * scale));
   const c = canvas.getContext("2d")!;
   c.drawImage(image, 0, 0, canvas.width, canvas.height);
-  const l = luminances(c.getImageData(0, 0, canvas.width, canvas.height).data);
+  const pixels = c.getImageData(0, 0, canvas.width, canvas.height).data,
+    l = luminances(pixels);
   return scoreQuality(
     {
       width: image.width,
@@ -84,6 +99,7 @@ export function evaluateQuality(image: HTMLCanvasElement, s: Settings) {
       sharpnessScore: blurCheck(l, canvas.width, canvas.height),
       brightness: brightnessCheck(l),
       glarePercent: glareCheck(l),
+      trapCoverage: trapCoverage(pixels),
     },
     s,
   );
