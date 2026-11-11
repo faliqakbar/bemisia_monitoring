@@ -46,3 +46,20 @@ export function parseExpectedSize(query: URLSearchParams) {
     throw new HttpError(400, "width dan height harus bilangan bulat positif.");
   return { width: w, height: h };
 }
+
+// Optional trap crop (cropX/cropY/cropWidth/cropHeight) inside the decoded photo.
+// Detections are then returned relative to the crop, like the app's cropped canvas.
+export function parseCrop(query: URLSearchParams) {
+  const keys = ["cropX", "cropY", "cropWidth", "cropHeight"] as const;
+  if (keys.every((k) => query.get(k) === null)) return null;
+  const [x, y, width, height] = keys.map((k) => Number(query.get(k)));
+  if (
+    ![x, y, width, height].every(Number.isInteger) ||
+    x < 0 ||
+    y < 0 ||
+    width < 1 ||
+    height < 1
+  )
+    throw new HttpError(400, "Area potong trap tidak valid.");
+  return { x, y, width, height };
+}

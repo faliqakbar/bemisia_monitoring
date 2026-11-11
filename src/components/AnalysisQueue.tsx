@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useApp } from "../state";
 import { jobPhoto } from "../offline/analysisQueue";
 import { readImage } from "../utils/image";
+import { cropCanvas } from "../utils/crop";
 import { formatDate } from "../utils/date";
 import type { AnalysisJob } from "../types";
 
@@ -23,9 +24,10 @@ export function AnalysisQueue() {
       return;
     }
     try {
-      const image = await readImage(
+      const full = await readImage(
         new File([photo], job.file_name, { type: photo.type }),
       );
+      const image = job.crop ? cropCanvas(full, job.crop) : full;
       setDraft({
         trap,
         image,

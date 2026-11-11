@@ -29,6 +29,7 @@ PWA diaktifkan pada build produksi. Buka sekali secara online, tunggu service wo
 - Pilih GH/trap atau scan QR `BEMISIA|GH12|T03` via ZXing; input manual bila kamera tidak tersedia.
 - Live camera dengan panduan bingkai, input capture kamera perangkat, atau upload galeri.
 - Quality check: resolusi, variance of Laplacian, luminansi, estimasi highlight. Status GOOD/WARNING/RETAKE; RETAKE memblokir analisis.
+- Cek keberadaan yellow trap dari warna (di bawah 15% foto = RETAKE, di bawah 40% = WARNING) dan **potong otomatis ke area trap** (+3% margin) sebelum analisis: tile lebih sedikit, latar belakang diabaikan. Server menerima file asli + area potong; dataset tetap menyimpan foto utuh dengan box di koordinat foto penuh. Dapat dimatikan di Settings.
 - Mock deterministic dari piksel, tiling 320/25%, global NMS, model version, progress per tile.
 - **Analyze di latar & lanjut**: foto masuk antrean (tersimpan di IndexedDB) dan dianalisis satu per satu selama aplikasi terbuka, sementara pengguna memotret trap berikutnya. Hasil muncul di panel Antrean analisis (Monitoring, dengan angka di menu) untuk direview lalu disimpan. Antrean yang terputus dilanjutkan saat aplikasi dibuka lagi. "Analyze & tunggu hasil" tetap tersedia.
 - Banner "Versi baru aplikasi tersedia" dengan tombol Muat ulang; aplikasi memeriksa versi baru tiap 30 menit dan saat kembali dibuka.

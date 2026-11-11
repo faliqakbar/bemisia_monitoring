@@ -189,6 +189,17 @@ export function SettingsPage() {
               di perangkat.
             </label>
           )}
+          <label className="check-label">
+            <input
+              type="checkbox"
+              checked={value.autoCrop}
+              onChange={(e) =>
+                setValue({ ...value, autoCrop: e.target.checked })
+              }
+            />
+            Potong otomatis ke area trap (analisis lebih cepat, latar belakang
+            diabaikan)
+          </label>
           <p className="footnote">
             Threshold epidemiological/action level belum divalidasi dan hanya
             untuk prototype. Nilai kualitas foto perlu dikalibrasi pada

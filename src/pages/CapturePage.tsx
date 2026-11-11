@@ -13,6 +13,7 @@ import {
 } from "../imageQuality/qualityEvaluator";
 import { detectImage } from "../ai/detector";
 import { formatDate } from "../utils/date";
+import { cropCanvas, trapCropRect } from "../utils/crop";
 // A fresh page per trap, so a photo taken for one trap never carries over to another.
 export function CapturePage() {
   const { trapId } = useParams();
@@ -58,15 +59,21 @@ function TrapCapture({ trapId }: { trapId?: string }) {
       setProgress("");
     }
   }
+  // Only the trap area (plus a margin) is analysed: fewer tiles, no background hits.
+  const crop =
+    image && quality && settings.autoCrop
+      ? trapCropRect(quality.trapBox, image.width, image.height)
+      : null;
   async function analyze() {
     if (!image || !quality || !trap || quality.status === "RETAKE") return;
+    const target = crop ? cropCanvas(image, crop) : image;
     const start = performance.now();
     setProgress("Preparing image...");
     try {
-      const result = await detectImage(image, settings, setProgress);
+      const result = await detectImage(target, settings, setProgress);
       setDraft({
         trap,
-        image,
+        image: target,
         quality,
         result,
         capturedAt,
@@ -91,6 +98,7 @@ function TrapCapture({ trapId }: { trapId?: string }) {
         image,
         quality,
         capturedAt,
+        crop,
       });
       notify("Foto masuk antrean analisis. Lanjut ke trap berikutnya.");
       navigate("/monitoring");
@@ -178,6 +186,17 @@ function TrapCapture({ trapId }: { trapId?: string }) {
                 muncul di Monitoring untuk direview. Biarkan aplikasi tetap
                 terbuka.
               </p>
+              {crop && image && (
+                <p className="muted small">
+                  Area trap terdeteksi: analisis hanya pada{" "}
+                  {Math.round(
+                    ((crop.width * crop.height) /
+                      (image.width * image.height)) *
+                      100,
+                  )}
+                  % foto; latar belakang diabaikan.
+                </p>
+              )}
             </>
           ) : (
             <section className="panel guidance">

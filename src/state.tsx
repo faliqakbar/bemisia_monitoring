@@ -34,6 +34,7 @@ import {
 } from "./offline/analysisQueue";
 import { detectImage } from "./ai/detector";
 import { readImage, sourceFiles } from "./utils/image";
+import { cropCanvas } from "./utils/crop";
 import type { QualityResult } from "./imageQuality/qualityEvaluator";
 interface State {
   greenhouses: Greenhouse[];
@@ -57,6 +58,7 @@ interface State {
     image: HTMLCanvasElement;
     quality: QualityResult;
     capturedAt: string;
+    crop: AnalysisJob["crop"];
   }) => Promise<void>;
   retryJob: (job: AnalysisJob) => Promise<void>;
   deleteJob: (id: string) => Promise<void>;
@@ -135,9 +137,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         await refreshJobs();
         const photo = await jobPhoto(job.id);
         if (!photo) throw new Error("Foto antrean tidak ditemukan.");
-        const image = await readImage(
+        const full = await readImage(
           new File([photo], job.file_name, { type: photo.type }),
         );
+        const image = job.crop ? cropCanvas(full, job.crop) : full;
         const start = performance.now();
         const result = await detectImage(image, job.settings, show);
         await saveJob({
@@ -168,6 +171,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     image: HTMLCanvasElement;
     quality: QualityResult;
     capturedAt: string;
+    crop: AnalysisJob["crop"];
   }) {
     // The original file keeps server results identical to an immediate analysis.
     const file = sourceFiles.get(input.image);
@@ -189,6 +193,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         created_at: new Date().toISOString(),
         quality: input.quality,
         settings,
+        crop: input.crop,
         file_name: file?.name ?? `${id}.png`,
         status: "waiting",
         attempts: 0,

@@ -14,7 +14,12 @@ import {
   luminances,
 } from "../src/imageQuality/brightnessCheck";
 import { glareCheck } from "../src/imageQuality/glareCheck";
-import { isTrapYellow, trapCoverage } from "../src/imageQuality/trapCheck";
+import {
+  isTrapYellow,
+  trapBounds,
+  trapCoverage,
+} from "../src/imageQuality/trapCheck";
+import { trapCropRect } from "../src/utils/crop";
 import { DEFAULT_SETTINGS } from "../src/types";
 import type { Detection } from "../src/ai/types";
 const box: Detection = {
@@ -198,5 +203,41 @@ describe("quality", () => {
     const l = luminances(new Uint8ClampedArray([255, 255, 0, 255]));
     expect(brightnessCheck(l)).toBeLessThan(245);
     expect(glareCheck(l)).toBe(0);
+  });
+});
+
+describe("trap crop", () => {
+  // 10 x 6 RGBA image: yellow card from column 2-6, rows 1-4; one stray yellow
+  // pixel at the right edge that must not stretch the box.
+  const W = 10,
+    H = 6,
+    data: number[] = [];
+  for (let y = 0; y < H; y++)
+    for (let x = 0; x < W; x++) {
+      const card = x >= 2 && x <= 6 && y >= 1 && y <= 4;
+      const speck = x === 9 && y === 0;
+      data.push(...(card || speck ? [227, 197, 53, 255] : [70, 120, 60, 255]));
+    }
+  it("finds the card and ignores a yellow speck", () => {
+    expect(trapBounds(data, W, H)).toEqual({
+      x: 0.2,
+      y: 1 / 6,
+      width: 0.5,
+      height: 4 / 6,
+    });
+    expect(trapBounds(new Array(16).fill(0), 2, 2)).toBeNull();
+  });
+  it("pads the trap box and skips crops that would keep most of the photo", () => {
+    const box = { x: 0.25, y: 0.2, width: 0.5, height: 0.6 };
+    expect(trapCropRect(box, 4000, 3000)).toEqual({
+      x: 880,
+      y: 510,
+      width: 2240,
+      height: 1980,
+    });
+    expect(
+      trapCropRect({ x: 0, y: 0, width: 0.98, height: 0.97 }, 4000, 3000),
+    ).toBeNull();
+    expect(trapCropRect(null, 4000, 3000)).toBeNull();
   });
 });

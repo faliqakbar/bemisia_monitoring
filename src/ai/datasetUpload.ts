@@ -1,6 +1,7 @@
 import type { Draft, MonitoringSession } from "../types";
 import { aiServerUrl } from "./serverDetector";
 import { sourceFiles } from "../utils/image";
+import { cropSources } from "../utils/crop";
 
 let available: Promise<boolean> | undefined;
 // Whether the AI server is set up to store dataset photos (its /health says so).
@@ -25,7 +26,12 @@ export async function sendToDataset(input: {
   notes: string;
 }) {
   const { draft } = input;
+  // A trap crop stores the whole original photo, with boxes moved to its coordinates.
+  const crop = cropSources.get(draft.image);
+  const dx = crop?.x ?? 0,
+    dy = crop?.y ?? 0;
   const photo =
+    crop?.file ??
     sourceFiles.get(draft.image) ??
     (await new Promise<Blob>((resolve, reject) =>
       draft.image.toBlob(
@@ -39,18 +45,18 @@ export async function sendToDataset(input: {
     trap_id: draft.trap.id,
     captured_at: draft.capturedAt,
     model_version: draft.result.modelVersion,
-    width: draft.image.width,
-    height: draft.image.height,
+    width: crop?.fullWidth ?? draft.image.width,
+    height: crop?.fullHeight ?? draft.image.height,
     feedback: input.feedback,
     notes: input.notes,
     bemisia_count: draft.result.count,
     exposure_days: input.exposureDays,
     detections: draft.result.detections.map(
       ({ x1, y1, x2, y2, confidence }) => ({
-        x1,
-        y1,
-        x2,
-        y2,
+        x1: x1 + dx,
+        y1: y1 + dy,
+        x2: x2 + dx,
+        y2: y2 + dy,
         confidence,
       }),
     ),

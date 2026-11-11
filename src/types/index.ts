@@ -72,6 +72,8 @@ export interface AnalysisJob {
   // Detection settings at the moment the photo was queued.
   settings: Settings;
   file_name: string;
+  // Pixel rectangle of the trap in the original photo; null analyses the whole photo.
+  crop?: { x: number; y: number; width: number; height: number } | null;
   status: "waiting" | "processing" | "done" | "failed";
   attempts: number;
   result?: DetectorResult;
@@ -91,6 +93,8 @@ export interface Settings {
   preferOnnx: boolean;
   // Analyse on the Cloud Run server while online (only when VITE_AI_SERVER_URL is set).
   useServer: boolean;
+  // Analyse only the trap area found from its yellow colour (utils/crop.ts).
+  autoCrop: boolean;
 }
 // Threshold epidemiological/action level belum divalidasi dan hanya untuk prototype.
 export const DEFAULT_SETTINGS: Settings = {
@@ -107,4 +111,5 @@ export const DEFAULT_SETTINGS: Settings = {
   // without visiting Settings; Simulation Mode is opt-in.
   preferOnnx: true,
   useServer: true,
+  autoCrop: true,
 };

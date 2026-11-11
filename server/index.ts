@@ -19,7 +19,7 @@ import {
   toPlanar,
 } from "../src/ai/yolo";
 import { modelIdentity, parseModelInfo } from "../src/ai/modelInfo";
-import { HttpError, parseExpectedSize, parseParams } from "./params";
+import { HttpError, parseCrop, parseExpectedSize, parseParams } from "./params";
 import { resizeTileBilinear } from "../src/ai/resample";
 import { uploadFiles } from "@huggingface/hub";
 import { datasetFiles, parseDatasetMeta, type DatasetMeta } from "./dataset";
@@ -59,6 +59,7 @@ async function detect(
   body: Buffer,
   params: ReturnType<typeof parseParams>,
   expected: { width: number; height: number } | null,
+  crop: ReturnType<typeof parseCrop>,
 ): Promise<DetectorResult> {
   const start = performance.now();
   let decoded;
@@ -83,15 +84,28 @@ async function detect(
       409,
       `Ukuran foto ${info.width}x${info.height} berbeda dari aplikasi ${expected.width}x${expected.height}.`,
     );
+  if (
+    crop &&
+    (crop.x + crop.width > info.width || crop.y + crop.height > info.height)
+  )
+    throw new HttpError(400, "Area potong trap di luar foto.");
+  const area = crop ?? { x: 0, y: 0, width: info.width, height: info.height };
+  // Tiles are laid out over the crop; pixels are read from the full photo.
   const tiles = getTilePositions(
-    info.width,
-    info.height,
+    area.width,
+    area.height,
     params.tileSize,
     params.overlap,
   );
   const all: Detection[] = [];
   for (const tile of tiles) {
-    const pixels = resizeTileBilinear(data, info.width, 3, tile, MODEL_INPUT);
+    const pixels = resizeTileBilinear(
+      data,
+      info.width,
+      3,
+      { ...tile, x: tile.x + area.x, y: tile.y + area.y },
+      MODEL_INPUT,
+    );
     const input = new ort.Tensor(
       "float32",
       toPlanar(pixels, MODEL_INPUT * MODEL_INPUT, 3),
@@ -246,6 +260,7 @@ createServer(async (req, res) => {
         body,
         params,
         parseExpectedSize(url.searchParams),
+        parseCrop(url.searchParams),
       );
       console.log(
         `detect ${(body.length / 1e6).toFixed(1)}MB tiles=${result.tileCount} count=${result.count} ${Math.round(result.inferenceTimeMs)}ms`,

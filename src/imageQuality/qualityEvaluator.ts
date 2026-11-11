@@ -5,7 +5,9 @@ import { resolutionCheck } from "./resolutionCheck";
 import {
   TRAP_MISSING_BELOW,
   TRAP_SMALL_BELOW,
+  trapBounds,
   trapCoverage,
+  type Rect,
 } from "./trapCheck";
 import type { Settings } from "../types";
 export interface QualityMetrics {
@@ -16,6 +18,8 @@ export interface QualityMetrics {
   glarePercent: number;
   // Fraction 0..1 of the photo that is yellow-trap coloured (trapCheck.ts).
   trapCoverage: number;
+  // Trap position as fractions of the photo, null when no trap was found.
+  trapBox?: Rect | null;
 }
 export interface QualityResult extends QualityMetrics {
   qualityScore: number;
@@ -100,6 +104,7 @@ export function evaluateQuality(image: HTMLCanvasElement, s: Settings) {
       brightness: brightnessCheck(l),
       glarePercent: glareCheck(l),
       trapCoverage: trapCoverage(pixels),
+      trapBox: trapBounds(pixels, canvas.width, canvas.height),
     },
     s,
   );

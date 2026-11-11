@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseExpectedSize, parseParams } from "../server/params";
+import { parseCrop, parseExpectedSize, parseParams } from "../server/params";
 import { datasetFiles, parseDatasetMeta } from "../server/dataset";
 import { resizeTileBilinear } from "../src/ai/resample";
 import { parseServerResult } from "../src/ai/serverDetector";
@@ -177,5 +177,22 @@ describe("dataset metadata", () => {
     expect(() => datasetFiles(parseDatasetMeta(meta), "image/gif")).toThrow(
       "tipe foto",
     );
+  });
+});
+
+describe("server crop parameters", () => {
+  it("is optional and must be whole non-negative numbers", () => {
+    expect(parseCrop(new URLSearchParams())).toBeNull();
+    expect(
+      parseCrop(
+        new URLSearchParams("cropX=10&cropY=20&cropWidth=300&cropHeight=400"),
+      ),
+    ).toEqual({ x: 10, y: 20, width: 300, height: 400 });
+    for (const q of [
+      "cropX=1",
+      "cropX=-1&cropY=0&cropWidth=5&cropHeight=5",
+      "cropX=0&cropY=0&cropWidth=0&cropHeight=5",
+    ])
+      expect(() => parseCrop(new URLSearchParams(q))).toThrow("tidak valid");
   });
 });

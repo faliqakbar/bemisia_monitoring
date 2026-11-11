@@ -2,6 +2,7 @@ import type { Detection, DetectorResult } from "./types";
 import type { Settings } from "../types";
 import { getTilePositions } from "./tiling";
 import { sourceFiles } from "../utils/image";
+import { cropSources } from "../utils/crop";
 
 export const aiServerUrl = (import.meta.env.VITE_AI_SERVER_URL ?? "")
   .trim()
@@ -67,24 +68,44 @@ export async function detectOnServer(
   onProgress?.("Menyiapkan foto untuk server AI...");
   // Re-encoding (even JPEG 0.92) changes counts noticeably, so send the original
   // file when there is one; the server applies EXIF rotation like the browser.
-  const file = sourceFiles.get(image);
+  // A trap crop is sent as the original file plus the crop rectangle; the server
+  // crops after decoding, so the upload stays the small camera JPEG.
+  const crop = cropSources.get(image);
+  const file = crop?.file ?? sourceFiles.get(image);
   const tiles = getTilePositions(
     image.width,
     image.height,
     settings.tileSize,
     settings.overlap,
   ).length;
-  const params = new URLSearchParams({
+  const base = {
     confidence: String(settings.confidence),
     nmsIou: String(settings.nmsIou),
     tileSize: String(settings.tileSize),
     overlap: String(settings.overlap),
+  };
+  const fileParams = new URLSearchParams(
+    crop
+      ? {
+          ...base,
+          width: String(crop.fullWidth),
+          height: String(crop.fullHeight),
+          cropX: String(crop.x),
+          cropY: String(crop.y),
+          cropWidth: String(image.width),
+          cropHeight: String(image.height),
+        }
+      : { ...base, width: String(image.width), height: String(image.height) },
+  );
+  // The canvas itself (already cropped) needs no crop parameters.
+  const canvasParams = new URLSearchParams({
+    ...base,
     width: String(image.width),
     height: String(image.height),
   });
   const controller = new AbortController(),
     timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-  const send = (blob: Blob) =>
+  const send = (blob: Blob, params: URLSearchParams) =>
     fetch(`${aiServerUrl}/detect?${params}`, {
       method: "POST",
       headers: { "Content-Type": blob.type },
@@ -95,11 +116,11 @@ export async function detectOnServer(
     onProgress?.(`Menganalisis di server AI (${tiles} tiles)...`);
     let response =
       file && SERVER_TYPES.includes(file.type)
-        ? await send(file)
-        : await send(await canvasPng(image));
+        ? await send(file, fileParams)
+        : await send(await canvasPng(image), canvasParams);
     // 409: the server decoded the file to a different size (e.g. orientation).
     if (response.status === 409 && file)
-      response = await send(await canvasPng(image));
+      response = await send(await canvasPng(image), canvasParams);
     const body: unknown = await response.json().catch(() => null);
     if (!response.ok)
       throw new Error(

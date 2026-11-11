@@ -29,3 +29,49 @@ export function trapCoverage(data: ArrayLike<number>) {
     if (isTrapYellow(data[i * 4], data[i * 4 + 1], data[i * 4 + 2])) yellow++;
   return pixels ? yellow / pixels : 0;
 }
+
+export interface Rect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+// Where the trap is, as fractions 0..1 of the photo: the rows and columns in which
+// trap yellow is more than a quarter as common as in the most yellow row/column,
+// so specks of yellow in the background do not stretch the box.
+export function trapBounds(
+  data: ArrayLike<number>,
+  width: number,
+  height: number,
+): Rect | null {
+  const cols = new Uint32Array(width),
+    rows = new Uint32Array(height);
+  for (let y = 0; y < height; y++)
+    for (let x = 0; x < width; x++) {
+      const i = (y * width + x) * 4;
+      if (isTrapYellow(data[i], data[i + 1], data[i + 2])) {
+        cols[x]++;
+        rows[y]++;
+      }
+    }
+  const span = (counts: Uint32Array) => {
+    let max = 0;
+    for (const c of counts) max = Math.max(max, c);
+    if (!max) return null;
+    let start = 0,
+      end = counts.length - 1;
+    while (counts[start] <= max / 4) start++;
+    while (counts[end] <= max / 4) end--;
+    return [start, end + 1] as const;
+  };
+  const xs = span(cols),
+    ys = span(rows);
+  if (!xs || !ys) return null;
+  return {
+    x: xs[0] / width,
+    y: ys[0] / height,
+    width: (xs[1] - xs[0]) / width,
+    height: (ys[1] - ys[0]) / height,
+  };
+}
